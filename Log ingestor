@@ -1,0 +1,41 @@
+import logging
+import json
+import os
+
+class LogIngestor:
+    def __init__(self, config):
+        self.config = config
+        self.setup_logging()
+
+    def setup_logging(self):
+        for api, settings in self.config.items():
+            log_file = settings['log_file']
+            log_level = settings['log_level']
+            logger = logging.getLogger(api)
+            logger.setLevel(log_level)
+            file_handler = logging.FileHandler(log_file)
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+            setattr(self, f'{api}_logger', logger)
+
+    def log_event(self, api, level, log_string, timestamp):
+        try:
+            logger = getattr(self, f'{api}_logger')
+            logger.log(level, json.dumps({
+                "level": level,
+                "log_string": log_string,
+                "timestamp": timestamp,
+                "metadata": {"source": f"log{self.config[api]['index']}.log"}
+            }))
+        except Exception as e:
+            print(f"Error logging event from {api}: {e}")
+
+# Example usage
+config = {
+    'api1': {'log_file': 'log1.log', 'log_level': logging.INFO, 'index': 1},
+    'api2': {'log_file': 'log2.log', 'log_level': logging.INFO, 'index': 2},
+    # Add more APIs and their configurations as required
+}
+ingestor = LogIngestor(config)
+ingestor.log_event('api1', logging.INFO, 'Inside the Search API', '2023-09-15T08:00:00Z')
