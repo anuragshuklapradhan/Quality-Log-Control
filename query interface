@@ -1,0 +1,41 @@
+import os
+import json
+from datetime import datetime
+
+class LogQueryInterface:
+    def __init__(self, log_directory):
+        self.log_directory = log_directory
+
+    def search_logs(self, query):
+        logs = []
+        try:
+            for filename in os.listdir(self.log_directory):
+                if filename.endswith('.log'):
+                    with open(os.path.join(self.log_directory, filename), 'r') as file:
+                        for line in file:
+                            log_data = json.loads(line.strip())
+                            if self.query_matches(log_data, query):
+                                logs.append(log_data)
+        except Exception as e:
+            print(f"Error searching logs: {e}")
+        return logs
+
+    def query_matches(self, log_data, query):
+        try:
+            for key, value in query.items():
+                if key == 'level' and log_data.get('level') != value:
+                    return False
+                elif key == 'log_string' and value not in log_data.get('log_string', ''):
+                    return False
+                elif key == 'timestamp':
+                    log_timestamp = datetime.strptime(log_data.get('timestamp'), '%Y-%m-%dT%H:%M:%SZ')
+                    if not (value[0] <= log_timestamp <= value[1]):
+                        return False
+                elif key == 'metadata.source' and log_data.get('metadata', {}).get('source') != value:
+                    return False
+            return True
+        except Exception as e:
+            print(f"Error matching query: {e}")
+            return False
+
+
