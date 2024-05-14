@@ -30,8 +30,6 @@ class LogIngestor:
             }))
         except Exception as e:
             print(f"Error logging event from {api}: {e}")
-
-# Example usage
 config = {
     'api1': {'log_file': 'log1.log', 'log_level': logging.INFO, 'index': 1},
     'api2': {'log_file': 'log2.log', 'log_level': logging.INFO, 'index': 2},
@@ -39,3 +37,4 @@ config = {
 }
 ingestor = LogIngestor(config)
 ingestor.log_event('api1', logging.INFO, 'Inside the Search API', '2023-09-15T08:00:00Z')
+
